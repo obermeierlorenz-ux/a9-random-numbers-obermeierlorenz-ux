@@ -148,7 +148,7 @@ for ax, N, win_fractions in zip(
         linestyle='--',
         label='Expected value'
     )
-    
+
     ax.axhline(
     1 / N,
     color='gray',
@@ -174,6 +174,25 @@ for ax, N, win_fractions in zip(
 plt.tight_layout()
 plt.show()
 
+print()
+print(' N | Stay measured | Stay predicted | Switch measured | Switch predicted')
+print('-' * 70)
+
+for i, N in enumerate(N_doors):
+
+    stay_measured = stay_wins[i] / k
+    switch_measured = switch_wins[i] / k
+
+    stay_predicted = 1 / N
+    switch_predicted = 1 - (1 / N)
+
+    print(
+        f'{N:2d} | '
+        f'{stay_measured:13.4f} | '
+        f'{stay_predicted:14.4f} | '
+        f'{switch_measured:15.4f} | '
+        f'{switch_predicted:16.4f}'
+    )
 
 
 
