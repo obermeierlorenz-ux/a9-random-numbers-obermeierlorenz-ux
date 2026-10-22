@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import matplotlib.pyplot as plt 
 
 if len(sys.argv) > 1:
     k = int(sys.argv[1])
@@ -8,17 +9,19 @@ else:
 
 N_doors = [2, 3, 10, 100]
 
-def monty_hall(k, N_doors):
+def monty_hall_switch(k, N_doors):
 
-    rng = np.random.defaul_rng(44)
+    rng = np.random.default_rng(44)
 
     wins_per_N = []
     losses_per_N = []
+    switch_fractions_per_N = []
 
     for N in N_doors:
 
         wins = 0
         losses = 0
+        win_fractions = []
 
         for iters in range(k):
 
@@ -28,48 +31,156 @@ def monty_hall(k, N_doors):
 
             
             #random zahl von 1 bis N als intiger = price in array machen
-            u = rng.integers(1, N +1)
+            u = rng.integers(N)
             doors[u] = 'prize'
             
             #beginn
             #random tür auswählen erster versuch
-            t = rng.integers(1, N+1)
+            t1 = rng.integers(N)
 
-            while open == t:
-                open = rng.integers(1, N+1)
-                
+            opened_doors = []
 
-            doors[open] = 'opend'
+            # Host opens N - 2 goat doors
+            while len(opened_doors) < N - 2:
 
-            if N != 2:
+                opened_door = rng.integers(N)
 
-                while t2 == open and t2 == t:
-                    t2 = rng.integer(1, N+1)
-            else:
-                pass
+                while (
+                    opened_door == t1
+                    or opened_door == u
+                    or opened_door in opened_doors
+                ):
+                    opened_door = rng.integers(N)
+
+                opened_doors.append(opened_door)
+                doors[opened_door] = 'opened goat'
+
+
+            # Find the one other unopened door
+            for door in range(N):
+                if door != t1 and door not in opened_doors:
+                    t2 = door
 
             if doors[t2] == 'prize':
                 wins += 1
             else:
                 losses += 1
 
+            win_fractions.append(wins / (iters + 1 ))
+
+        switch_fractions_per_N.append(win_fractions)
         wins_per_N.append(wins)
         losses_per_N.append(losses)
 
-    return wins_per_N, losses_per_N
+    return wins_per_N, losses_per_N, switch_fractions_per_N
 
-wins_per_N, losses_per_N = monty_hall(k)
+def monty_hall_stay(k, N_doors):
+
+    rng = np.random.default_rng(45)
+
+    wins_per_N = []
+    losses_per_N = []
+    stay_fractions_per_N = []
+
+    for N in N_doors:
+
+        wins = 0
+        losses = 0
+        win_fractions = []
+
+        for iters in range(k):
+
+            #arry erstllen in dem alle türeden sind also vill zero arry
+            #all N instead of u are goats in array machen 
+            doors = np.full(N, 'goat', dtype=object)
+
+            
+            #random zahl von 1 bis N als intiger = price in array machen
+            u = rng.integers(N)
+            doors[u] = 'prize'
+            
+            #beginn
+            #random tür auswählen erster versuch
+            t1 = rng.integers(N)
+
+            if doors[t1] == 'prize':
+                wins += 1
+            else:
+                losses += 1
+
+            win_fractions.append(wins / (iters + 1 ))
+
+        stay_fractions_per_N.append(win_fractions)
+        wins_per_N.append(wins)
+        losses_per_N.append(losses)
+
+    return wins_per_N, losses_per_N, stay_fractions_per_N
+
+switch_wins, switch_losses , switch_fractions_per_N = monty_hall_switch(k, N_doors)
+stay_wins, stay_loses, stay_fractions_per_N = monty_hall_stay(k, N_doors)
 
 print('N values:',N_doors)
-print('wins per N:', wins_per_N)
-print('losses per N:', losses_per_N)
+print('wins per N:', switch_wins)
+print('losses per N:', switch_losses)
+
+
+#plot 1
+trial_numbers = np.arange(1, k + 1)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 7))
+
+for ax, N, win_fractions in zip(
+    axes.flat,
+    N_doors,
+    switch_fractions_per_N
+
+):
+    ax.semilogx(
+        trial_numbers,
+        win_fractions,
+        label='Switch'
+    )
+
+    # Expected switch probability
+    ax.axhline(
+        (N - 1) / N,
+        color='black',
+        linestyle='--',
+        label='Expected value'
+    )
+    
+    ax.axhline(
+    1 / N,
+    color='gray',
+    linestyle=':',
+    label='Expected stay value'
+)
+
+
+    ax.semilogx(
+    trial_numbers,
+    stay_fractions_per_N[N_doors.index(N)],
+    label='Stay'
+)
+
+    ax.set_xlabel('Trial number j')
+    ax.set_ylabel('Win fraction')
+    ax.set_title(f'N = {N}')
+    ax.set_xlim(1, k)
+    ax.set_ylim(0, 1)
+    ax.grid()
+    ax.legend()
+
+plt.tight_layout()
+plt.show()
 
 
 
 
-            
- 
-            
 
-            
+
+
+
+
+
 
