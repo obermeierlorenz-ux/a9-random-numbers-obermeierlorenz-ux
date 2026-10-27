@@ -45,7 +45,54 @@ for p in p_values:
     all_runs[p] = runs_for_p
 
 
+
+
+#estimate the half time
+
+half_life_result = {}
+
+for p in p_values: 
+
+    runs_array = np.array(all_runs[p])
+
+    #avverage population of each runs at every time
+    average_population= np.mean(runs_array, axis = 0 )
+
+    #sample time closest to M0/2
+    half_population= M0/2 
+
+    differences=np.abs(average_population - half_population)
+    half_index = np.argmin(differences)
+    measured_half_life = time_values[half_index]
+
+    #decay constant
+    decay_constant=-np.log(1 - p) / dt
+
+    #predicted half life
+    predicted_half_life = np.log(2) / decay_constant
+
+    relative_difference = (measured_half_life- predicted_half_life) / predicted_half_life
+
+    half_life_result[p] = (
+         average_population,
+         half_index, 
+         measured_half_life,
+         predicted_half_life, 
+         decay_constant,
+         relative_difference
+    )
+
+    print()
+    print(f'p = {p}')
+    print(f'lambda = {decay_constant:.6f} 1/s')
+    print(f'predicted half-life = {predicted_half_life:.4f} s')
+    print(f'measured half-life = {measured_half_life:.4f} s')
+    print(f'relative difference = {relative_difference:.4%}')
+
+
+
 #decay probability, constn and expected population
+#general plots
 fig, axes = plt.subplots(1, 2, figsize=(11, 4))
 
 for ax, p in zip(axes, p_values):
@@ -92,73 +139,12 @@ for ax, p in zip(axes, p_values):
 
     decay_constant = -np.log(1 - p) / dt
 
-    ax.set_xlabel('Time t (s)')
-    ax.set_ylabel('Remaining nuclei M')
-    ax.set_title(f'Decay probability p = {p}, lambda ={decay_constant:.4f} 1/s')
-    ax.grid()
-    ax.legend()
 
-plt.tight_layout()
-plt.show()
+     # Get the measured half-life information
+    half_index = half_life_result[p][1]
+    measured_half_life = half_life_result[p][2]
 
-
-#estimate the half time
-
-half_life_result = {}
-
-for p in p_values: 
-
-    runs_array = np.array(all_runs[p])
-
-    #avverage population of each runs at every time
-    average_population= np.mean(runs_array, axis = 0 )
-
-    #sample time closest to M0/2
-    half_population= M0/2 
-
-    differences=np.abs(average_population - half_population)
-    half_index = np.armin(differences)
-    measured_half_life = time_values[half_index]
-
-    #decay constant
-    decay_constant=-np.log(1 - p) / dt
-
-    #predicted half life
-    predicted_half_life = np.log(2) / decay_constant
-
-    relative_difference = (measured_half_life- predicted_half_life) / predicted_half_life
-
-    half_life_result[p] = (
-         average_population,
-         half_index, 
-         measured_half_life,
-         predicted_half_life, 
-         decay_constant,
-         relative_difference
-    )
-
-    print()
-    print(f'p = {p}')
-    print(f'lambda = {decay_constant:.6f} 1/s')
-    print(f'predicted half-life = {predicted_half_life:.4f} s')
-    print(f'measured half-life = {measured_half_life:.4f} s')
-    print(f'relative difference = {relative_difference:.4%}')
-
-    for ax, p in zip(axes, p_values):
-
-        (
-        average_population,
-        half_index,
-        measured_half_life,
-        predicted_half_life,
-        decay_constant,
-        relative_difference
-        ) = half_life_result[p]
-
-
-        #plot
-
-            # Half of the initial population
+    # Mark half of the initial population
     ax.axhline(
         M0 / 2,
         color='gray',
@@ -167,7 +153,7 @@ for p in p_values:
         label='M0 / 2'
     )
 
-    # Measured half-life
+    # Mark measured half-life
     ax.axvline(
         measured_half_life,
         color='purple',
@@ -175,3 +161,39 @@ for p in p_values:
         linewidth=2,
         label='Measured half-life'
     )
+
+    # Mark the average population point used for the measurement
+    ax.plot(
+        measured_half_life,
+        average_population[half_index],
+        marker='o',
+        color='purple',
+        markersize=6
+    )
+
+    ax.set_xlabel('Time t (s)')
+    ax.set_ylabel('Number of undecayed nuclei M')
+    ax.set_title(f'Decay probability p = {p}, lambda ={decay_constant:.4f} 1/s')
+    ax.grid()
+    ax.legend()
+
+plt.tight_layout()
+plt.show()
+
+#test
+survivors = all_runs[0.10][0]
+print()
+print(np.all(survivors >= 0))
+print(np.all(survivors <= M0))
+print(np.all(np.diff(survivors) <= 0))
+
+#p=0
+test_p_zero = decay(M0, 0.0, dt, n_steps, rng)
+
+print()
+print(np.all(test_p_zero == M0))
+
+#extincted populations
+test_extinct = decay(0, 0.10, dt, 5, rng)
+print()
+print(test_extinct)
