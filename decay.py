@@ -104,4 +104,74 @@ plt.show()
 
 #estimate the half time
 
+half_life_result = {}
 
+for p in p_values: 
+
+    runs_array = np.array(all_runs[p])
+
+    #avverage population of each runs at every time
+    average_population= np.mean(runs_array, axis = 0 )
+
+    #sample time closest to M0/2
+    half_population= M0/2 
+
+    differences=np.abs(average_population - half_population)
+    half_index = np.armin(differences)
+    measured_half_life = time_values[half_index]
+
+    #decay constant
+    decay_constant=-np.log(1 - p) / dt
+
+    #predicted half life
+    predicted_half_life = np.log(2) / decay_constant
+
+    relative_difference = (measured_half_life- predicted_half_life) / predicted_half_life
+
+    half_life_result[p] = (
+         average_population,
+         half_index, 
+         measured_half_life,
+         predicted_half_life, 
+         decay_constant,
+         relative_difference
+    )
+
+    print()
+    print(f'p = {p}')
+    print(f'lambda = {decay_constant:.6f} 1/s')
+    print(f'predicted half-life = {predicted_half_life:.4f} s')
+    print(f'measured half-life = {measured_half_life:.4f} s')
+    print(f'relative difference = {relative_difference:.4%}')
+
+    for ax, p in zip(axes, p_values):
+
+        (
+        average_population,
+        half_index,
+        measured_half_life,
+        predicted_half_life,
+        decay_constant,
+        relative_difference
+        ) = half_life_result[p]
+
+
+        #plot
+
+            # Half of the initial population
+    ax.axhline(
+        M0 / 2,
+        color='gray',
+        linestyle=':',
+        linewidth=2,
+        label='M0 / 2'
+    )
+
+    # Measured half-life
+    ax.axvline(
+        measured_half_life,
+        color='purple',
+        linestyle='--',
+        linewidth=2,
+        label='Measured half-life'
+    )
