@@ -6,10 +6,31 @@ M0 = 100_000
 dt = 1.0
 n_steps = 200
 
+def validate_decay_inputs(M0, p, dt, n_steps):
+
+    if not isinstance(M0,int) or M0 < 1:
+        raise ValueError('M0 must be a positive integer.')
+
+    if not isinstance(n_steps, int) or n_steps < 1:
+        raise ValueError('n_steps must be a positive integer.')
+
+    if not isinstance(p,(int, float)) or not 0 <= p < 1:
+        raise ValueError('p must satisfy 0 <= p < 1.')
+
+    if not isinstance(dt,(int, float)) or dt <= 0:
+        raise ValueError('dt must be positive.')
+
 time_values = np.arange(n_steps + 1) * dt
+
+if len(sys.argv) > 1:
+    seed = int(sys.argv[1])
+else:
+    seed = 44
 
 
 def decay(M0, p, dt, n_steps, rng):
+
+        validate_decay_inputs(M0, p, dt, n_steps)
 
         M = M0
         survivors = [M]
@@ -28,7 +49,8 @@ def decay(M0, p, dt, n_steps, rng):
 
 
 p_values = [0.10, 0.02]
-rng = np.random.default_rng(44)
+rng = np.random.default_rng(seed)
+print(f'Seed: {seed}')
 
 all_runs = {}
 
@@ -193,7 +215,15 @@ test_p_zero = decay(M0, 0.0, dt, n_steps, rng)
 print()
 print(np.all(test_p_zero == M0))
 
-#extincted populations
-test_extinct = decay(0, 0.10, dt, 5, rng)
+
+# Test: an already extinct population remains extinct
+M_empty = 0
+empty_history = [M_empty]
+
+for step in range(5):
+    u = rng.random(M_empty)
+    M_empty = np.count_nonzero(u >= 0.10)
+    empty_history.append(M_empty)
+
 print()
-print(test_extinct)
+print(np.array(empty_history))

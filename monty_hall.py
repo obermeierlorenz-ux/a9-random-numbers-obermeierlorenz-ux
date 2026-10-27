@@ -7,11 +7,30 @@ if len(sys.argv) > 1:
 else:
     k = 10000
 
+if len(sys.argv) > 2:
+    seed = int(sys.argv[2])
+else:
+    seed = 44
+
+rng = np.random.default_rng(seed)
+print(f'Seed: {seed}')
+
 N_doors = [2, 3, 10, 100]
 
-def monty_hall_switch(k, N_doors):
 
-    rng = np.random.default_rng(44)
+def validate_monty_inputs(k, N_doors):
+
+    if not isinstance(k, int) or k < 1:
+        raise ValueError('k must be a positive integer.')
+
+    for N in N_doors:
+        if not isinstance(N, int) or N < 2:
+            raise ValueError('Each number of doors must be an integer of at least 2.')
+
+
+def monty_hall_switch(k, N_doors, rng):
+
+    validate_monty_inputs(k, N_doors)
 
     wins_per_N = []
     losses_per_N = []
@@ -74,9 +93,9 @@ def monty_hall_switch(k, N_doors):
 
     return wins_per_N, losses_per_N, switch_fractions_per_N
 
-def monty_hall_stay(k, N_doors):
+def monty_hall_stay(k, N_doors, rng):
 
-    rng = np.random.default_rng(45)
+    validate_monty_inputs(k, N_doors)
 
     wins_per_N = []
     losses_per_N = []
@@ -116,8 +135,8 @@ def monty_hall_stay(k, N_doors):
 
     return wins_per_N, losses_per_N, stay_fractions_per_N
 
-switch_wins, switch_losses , switch_fractions_per_N = monty_hall_switch(k, N_doors)
-stay_wins, stay_loses, stay_fractions_per_N = monty_hall_stay(k, N_doors)
+switch_wins, switch_losses , switch_fractions_per_N = monty_hall_switch(k, N_doors, rng)
+stay_wins, stay_loses, stay_fractions_per_N = monty_hall_stay(k, N_doors, rng)
 
 print('N values:',N_doors)
 print('wins per N:', switch_wins)
@@ -193,13 +212,4 @@ for i, N in enumerate(N_doors):
         f'{switch_measured:15.4f} | '
         f'{switch_predicted:16.4f}'
     )
-
-
-
-
-
-
-
-
-
 
